@@ -24,15 +24,15 @@ public class PoliciesPanel extends JPanel {
     private final JList<ListItem> lstPeople = new JList<>();
     private final JPanel fields = Ui.verticalPanel();
     private final JButton btnAssign = new JButton("Assign");
-    private final JButton btnRemove = new JButton("Remove");
-    private final JButton btnDelete = new JButton("Delete Policy");
+    private final JButton btnRemove = Ui.dangerButton("Remove");
+    private final JButton btnDelete = Ui.dangerButton("Delete Policy");
     private final JPanel actions = Ui.actions(btnDelete);
 
     public PoliciesPanel(PolicyService policyService, PersonService personService) {
         this.policyService = policyService;
         this.personService = personService;
 
-        JButton btnNew = new JButton("New Policy");
+        JButton btnNew = Ui.primaryButton("New Policy");
         btnNew.addActionListener(e -> newPolicy());
         btnAssign.addActionListener(e -> assignPerson());
         btnRemove.addActionListener(e -> removePerson());
@@ -85,7 +85,7 @@ public class PoliciesPanel extends JPanel {
 
     private void deletePolicy() {
         Policy policy = selected();
-        if (!Ui.confirm(this, "Delete this " + policy.getPolicyTier() + " policy? People on it will have no policy."))
+        if (!Ui.confirm(this, "Delete", "Delete this " + policy.getPolicyTier() + " policy? People on it will have no policy."))
             return;
 
         Ui.run(this, () -> {

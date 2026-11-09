@@ -27,24 +27,22 @@ public class CrewPanel extends JPanel {
     private final JTextArea txtCerts = Ui.text();
     private final JPanel fields = Ui.verticalPanel();
     private final JButton btnRole = new JButton("Change Role");
-    private final JButton btnDelete = new JButton("Delete");
+    private final JButton btnDelete = Ui.dangerButton("Delete Crew Member");
     private final JPanel actions = Ui.actions(btnRole, btnDelete);
 
     public CrewPanel(PersonService personService, RoleService roleService) {
         this.personService = personService;
         this.roleService = roleService;
 
-        JButton btnPilot = new JButton("New Pilot");
-        JButton btnMedic = new JButton("New Medic");
-        btnPilot.addActionListener(e -> newPilot());
-        btnMedic.addActionListener(e -> newMedic());
+        JButton btnNew = Ui.menuButton("New Crew Member", Ui.menuItem("Pilot", this::newPilot),
+                Ui.menuItem("Medic", this::newMedic));
         btnRole.addActionListener(e -> ChangeRole.show(this, roleService, selected(), this::refresh));
         btnDelete.addActionListener(e -> delete());
 
         Ui.addField(fields, "Age", lblAge);
         Ui.addField(fields, "Address", txtAddress);
         Ui.addField(fields, "Weapon certifications", txtCerts);
-        Ui.layout(this, Ui.toolbar(btnPilot, btnMedic), table, Ui.details(lblTitle, fields, actions));
+        Ui.layout(this, Ui.toolbar(btnNew), table, Ui.details(lblTitle, fields, actions));
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting())
@@ -82,7 +80,7 @@ public class CrewPanel extends JPanel {
 
     private void delete() {
         Person person = selected();
-        if (!Ui.confirm(this, "Delete " + person.getName() + " " + person.getSurname() + "?"))
+        if (!Ui.confirm(this, "Delete", "Delete " + person.getName() + " " + person.getSurname() + "?"))
             return;
 
         Ui.run(this, () -> {

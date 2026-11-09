@@ -5,7 +5,6 @@ import com.olafnaleszkiewicz.traumateam.model.person.Client;
 import com.olafnaleszkiewicz.traumateam.service.MissionService;
 import com.olafnaleszkiewicz.traumateam.service.PersonService;
 import com.olafnaleszkiewicz.traumateam.service.RoleService;
-import com.olafnaleszkiewicz.traumateam.view.common.ThemeToggleButton;
 import com.olafnaleszkiewicz.traumateam.view.common.Ui;
 
 import javax.swing.*;
@@ -27,10 +26,11 @@ public class ClientsPanel extends JPanel {
     private final MissionService missionService;
     private final RoleService roleService;
 
-    private final JButton btnNew = new JButton("New Client");
-    private final JButton btnDelete = new JButton("Delete Client");
+    private final JButton btnNew = Ui.primaryButton("New Client");
+    private final JButton btnDelete = Ui.dangerButton("Delete Client");
     private final JButton btnMissions = new JButton("Manage Missions");
     private final JButton btnRole = new JButton("Change Role");
+    private final JPanel actions = Ui.actions(btnMissions, btnRole, btnDelete);
     private final JTextField txtFilter = new JTextField(22);
 
     private final JLabel lblTitle = new JLabel();
@@ -53,23 +53,7 @@ public class ClientsPanel extends JPanel {
         /* ===== toolbar ================================================= */
         txtFilter.putClientProperty(FlatClientProperties.PLACEHOLDER_TEXT, "Search by email");
         txtFilter.putClientProperty(FlatClientProperties.TEXT_FIELD_SHOW_CLEAR_BUTTON, true);
-        btnNew.putClientProperty(FlatClientProperties.STYLE,
-                "background: $Button.default.background; foreground: $Button.default.foreground;"
-                        + "hoverBackground: $Button.default.hoverBackground;");
-
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        actions.add(txtFilter);
-        actions.add(Box.createHorizontalStrut(8));
-        actions.add(btnNew);
-        actions.add(Box.createHorizontalStrut(8));
-        actions.add(btnDelete);
-
-        JPanel top = new JPanel(new BorderLayout());
-        top.add(actions, BorderLayout.WEST);
-        top.add(ThemeToggleButton.create(), BorderLayout.EAST);
-        add(top, BorderLayout.NORTH);
-
-        btnDelete.setEnabled(false);
+        add(Ui.toolbar(txtFilter, btnNew), BorderLayout.NORTH);
 
         /* ==== Filter ==================================================== */
         table.setRowSorter(sorter);
@@ -111,10 +95,7 @@ public class ClientsPanel extends JPanel {
             int modelRow = table.convertRowIndexToModel(viewRow);
             Client c = model.getClientAt(modelRow);
 
-            int ok = JOptionPane.showConfirmDialog(this, "Delete client “" + c.getPerson()
-                    .getSurname() + "”?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-
-            if (ok == JOptionPane.YES_OPTION) {
+            if (Ui.confirm(this, "Delete", "Delete client “" + c.getPerson().getSurname() + "”?")) {
                 personService.deleteClient(c.getId());
                 refreshTable();
             }
@@ -139,7 +120,6 @@ public class ClientsPanel extends JPanel {
 
         table.getSelectionModel().addListSelectionListener(ev -> {
             int viewRow = table.getSelectedRow();
-            btnDelete.setEnabled(viewRow >= 0);
             showDetails(viewRow >= 0 ? model.getClientAt(table.convertRowIndexToModel(viewRow)) : null);
         });
 
@@ -153,11 +133,6 @@ public class ClientsPanel extends JPanel {
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         /* ===== details ================================================= */
-        lblTitle.putClientProperty(FlatClientProperties.STYLE_CLASS, "h3");
-        lblTitle.setAlignmentX(LEFT_ALIGNMENT);
-        btnMissions.setAlignmentX(LEFT_ALIGNMENT);
-        btnRole.setAlignmentX(LEFT_ALIGNMENT);
-
         detailFields.setLayout(new BoxLayout(detailFields, BoxLayout.Y_AXIS));
         detailFields.setAlignmentX(LEFT_ALIGNMENT);
         addField("Email", lblEmail);
@@ -167,18 +142,7 @@ public class ClientsPanel extends JPanel {
         addField("City", lblCity);
         addField("Country", lblCountry);
 
-        JPanel details = new JPanel();
-        details.setLayout(new BoxLayout(details, BoxLayout.Y_AXIS));
-        details.setBorder(BorderFactory.createEmptyBorder(4, 10, 0, 4));
-        details.setPreferredSize(new Dimension(300, 0));
-        details.add(lblTitle);
-        details.add(Box.createVerticalStrut(16));
-        details.add(detailFields);
-        details.add(Box.createVerticalGlue());
-        details.add(btnMissions);
-        details.add(Box.createVerticalStrut(8));
-        details.add(btnRole);
-        add(details, BorderLayout.EAST);
+        add(Ui.details(lblTitle, detailFields, actions), BorderLayout.EAST);
 
         Ui.refreshWhenShown(this, this::refreshTable);
         refreshTable();
@@ -216,8 +180,7 @@ public class ClientsPanel extends JPanel {
 
     private void showDetails(Client c) {
         detailFields.setVisible(c != null);
-        btnMissions.setVisible(c != null);
-        btnRole.setVisible(c != null);
+        actions.setVisible(c != null);
 
         if (c == null) {
             lblTitle.setText("Select a client");

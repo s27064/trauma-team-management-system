@@ -17,6 +17,110 @@ import java.util.List;
 import java.util.function.Function;
 
 public final class Ui {
+    private static final int BUTTON_GAP = 8;
+    private static final int BUTTON_MIN_WIDTH = 150;
+
+    private static final String PRIMARY_STYLE = "font: bold;"
+            + "background: #0059C1;"
+            + "focusedBackground: #0059C1;"
+            + "foreground: #FFFFFF;"
+            + "hoverBackground: #004FAB;"
+            + "pressedBackground: #00428F;"
+            + "borderColor: #0059C1;"
+            + "hoverBorderColor: #004FAB;";
+
+    private static final String DANGER_STYLE = "borderWidth: 1;"
+            + "hoverBackground: #B91C1C; hoverForeground: #FFFFFF; hoverBorderColor: #B91C1C;"
+            + "pressedBackground: #991B1B; pressedForeground: #FFFFFF;"
+            + "[light]background: $Button.background; [light]focusedBackground: $Button.background;"
+            + "[light]foreground: #B71C1C;"
+            + "[dark]background: #3A3A3A; [dark]focusedBackground: #3A3A3A;"
+            + "[dark]foreground: #FFB4AB; [dark]borderColor: #5A5A5A;";
+
+    private static final String CONFIRM_DANGER_STYLE = "font: bold;"
+            + "background: #B91C1C;"
+            + "focusedBackground: #B91C1C;"
+            + "foreground: #FFFFFF;"
+            + "hoverBackground: #991B1B;"
+            + "pressedBackground: #7F1D1D;"
+            + "borderColor: #B91C1C;"
+            + "hoverBorderColor: #991B1B;";
+
+    /** Keeps a dialog's default button (the one Enter presses) looking like an ordinary button. */
+    private static final String NEUTRAL_DEFAULT_STYLE = "default.background: $Button.background;"
+            + "default.focusedBackground: $Button.background;"
+            + "default.foreground: $Button.foreground;"
+            + "default.hoverBackground: $Button.hoverBackground;"
+            + "default.pressedBackground: $Button.pressedBackground;"
+            + "default.borderColor: $Button.borderColor;"
+            + "default.hoverBorderColor: $Button.hoverBorderColor;"
+            + "default.boldText: false;";
+
+    /** The main action of a screen or dialog. */
+    public static JButton primaryButton(String text) {
+        return styledButton(text, PRIMARY_STYLE);
+    }
+
+    /** Deletes, detaches or clears something. Stays quiet until hovered. */
+    public static JButton dangerButton(String text) {
+        return styledButton(text, DANGER_STYLE);
+    }
+
+    /** A primary button opening a menu, for one action that comes in several kinds. */
+    public static JButton menuButton(String text, JMenuItem... items) {
+        JButton button = primaryButton(text + "  \u25BE");
+        JPopupMenu menu = new JPopupMenu();
+        for (JMenuItem item : items)
+            menu.add(item);
+        button.addActionListener(e -> {
+            SwingUtilities.updateComponentTreeUI(menu);
+            Dimension size = menu.getPreferredSize();
+            menu.setPopupSize(Math.max(button.getWidth(), size.width), size.height);
+            menu.show(button, 0, button.getHeight());
+        });
+        return button;
+    }
+
+    public static JMenuItem menuItem(String text, Runnable action) {
+        JMenuItem item = new JMenuItem(text);
+        item.addActionListener(e -> action.run());
+        return item;
+    }
+
+    private static JButton styledButton(String text, String style) {
+        JButton button = new JButton(text);
+        button.putClientProperty(FlatClientProperties.STYLE, style);
+        return button;
+    }
+
+    private static JPanel buttonGrid(int rows, int columns, JButton... buttons) {
+        JPanel grid = new JPanel(new GridLayout(rows, columns, BUTTON_GAP, BUTTON_GAP)) {
+            @Override
+            public Dimension getMaximumSize() {
+                return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+            }
+        };
+        grid.setAlignmentX(Component.LEFT_ALIGNMENT);
+        for (JButton button : buttons)
+            grid.add(button);
+        return grid;
+    }
+
+    private static void applyMinWidth(JComponent button) {
+        button.putClientProperty(FlatClientProperties.MINIMUM_WIDTH, BUTTON_MIN_WIDTH);
+    }
+
+    /** Equal-width buttons on the end of a dialog's bottom row, with optional content filling the rest of it. */
+    public static JPanel footer(JComponent start, JButton... buttons) {
+        for (JButton button : buttons)
+            applyMinWidth(button);
+
+        JPanel footer = new JPanel(new BorderLayout(BUTTON_GAP, 0));
+        if (start != null)
+            footer.add(start, BorderLayout.CENTER);
+        footer.add(buttonGrid(1, 0, buttons), BorderLayout.EAST);
+        return footer;
+    }
 
     public static JTable table(int[] widths, String... columns) {
         JTable table = new JTable(new DefaultTableModel(columns, 0));
@@ -32,22 +136,16 @@ public final class Ui {
         return table;
     }
 
-    public static JPanel toolbar(JButton... buttons) {
-        buttons[0].putClientProperty(FlatClientProperties.STYLE,
-                "background: $Button.default.background; foreground: $Button.default.foreground;"
-                        + "hoverBackground: $Button.default.hoverBackground;");
-
+    public static JPanel toolbar(JComponent... items) {
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        for (int i = 0; i < buttons.length; i++) {
+        for (int i = 0; i < items.length; i++) {
             if (i > 0)
-                actions.add(Box.createHorizontalStrut(8));
-            actions.add(buttons[i]);
+                actions.add(Box.createHorizontalStrut(BUTTON_GAP));
+            if (items[i] instanceof JButton)
+                applyMinWidth(items[i]);
+            actions.add(items[i]);
         }
-
-        JPanel top = new JPanel(new BorderLayout());
-        top.add(actions, BorderLayout.WEST);
-        top.add(ThemeToggleButton.create(), BorderLayout.EAST);
-        return top;
+        return actions;
     }
 
     public static void layout(JPanel panel, JPanel toolbar, JTable table, JPanel details) {
@@ -67,14 +165,17 @@ public final class Ui {
     }
 
     public static JPanel actions(JButton... buttons) {
-        JPanel panel = verticalPanel();
-        for (int i = 0; i < buttons.length; i++) {
-            if (i > 0)
-                panel.add(Box.createVerticalStrut(8));
-            buttons[i].setAlignmentX(Component.LEFT_ALIGNMENT);
-            panel.add(buttons[i]);
-        }
-        return panel;
+        JPanel actions = verticalPanel();
+        if (buttons.length == 0)
+            return actions;
+
+        JSeparator separator = new JSeparator();
+        separator.setAlignmentX(Component.LEFT_ALIGNMENT);
+        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, separator.getPreferredSize().height));
+        actions.add(separator);
+        actions.add(Box.createVerticalStrut(12));
+        actions.add(buttonGrid(0, 1, buttons));
+        return actions;
     }
 
     public static JPanel details(JLabel title, JPanel fields, JPanel actions) {
@@ -92,13 +193,17 @@ public final class Ui {
         return details;
     }
 
-    public static void addField(JPanel fields, String caption, JComponent value) {
+    public static void addField(JPanel fields, String caption, JComponent value, JButton... buttons) {
         JLabel label = new JLabel(caption);
         label.putClientProperty(FlatClientProperties.STYLE, "foreground: $Label.disabledForeground");
         value.setAlignmentX(Component.LEFT_ALIGNMENT);
         fields.add(label);
         fields.add(value);
-        fields.add(Box.createVerticalStrut(12));
+        if (buttons.length > 0) {
+            fields.add(Box.createVerticalStrut(6));
+            fields.add(buttonGrid(1, buttons.length, buttons));
+        }
+        fields.add(Box.createVerticalStrut(buttons.length > 0 ? 14 : 12));
     }
 
     public static void addListField(JPanel fields, String caption, JList<ListItem> list, JButton add,
@@ -111,11 +216,7 @@ public final class Ui {
         remove.setEnabled(false);
         list.addListSelectionListener(e -> remove.setEnabled(!list.isSelectionEmpty()));
 
-        JPanel buttons = new JPanel(new GridLayout(1, 2, 8, 0));
-        buttons.add(add);
-        buttons.add(remove);
-        buttons.setAlignmentX(Component.LEFT_ALIGNMENT);
-        buttons.setMaximumSize(new Dimension(Integer.MAX_VALUE, buttons.getPreferredSize().height));
+        JPanel buttons = buttonGrid(1, 2, add, remove);
 
         JLabel label = new JLabel(caption);
         label.putClientProperty(FlatClientProperties.STYLE, "foreground: $Label.disabledForeground");
@@ -190,9 +291,16 @@ public final class Ui {
         return ok == JOptionPane.OK_OPTION ? items.get(combo.getSelectedIndex()) : null;
     }
 
-    public static boolean confirm(Component parent, String message) {
-        return JOptionPane.showConfirmDialog(parent, message, "Confirm",
-                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
+    /** Asks before a destructive action. The confirm button is named after the action; Cancel is the default. */
+    public static boolean confirm(Component parent, String action, String message) {
+        JButton confirm = styledButton(action, CONFIRM_DANGER_STYLE);
+        JButton cancel = styledButton("Cancel", NEUTRAL_DEFAULT_STYLE);
+        for (JButton button : List.of(confirm, cancel)) {
+            button.addActionListener(e -> ((JOptionPane) SwingUtilities.getAncestorOfClass(JOptionPane.class, button))
+                    .setValue(button));
+        }
+        return JOptionPane.showOptionDialog(parent, message, "Confirm " + action, JOptionPane.DEFAULT_OPTION,
+                JOptionPane.WARNING_MESSAGE, null, new Object[] { confirm, cancel }, cancel) == 0;
     }
 
     public static List<String> commaList(String text) {

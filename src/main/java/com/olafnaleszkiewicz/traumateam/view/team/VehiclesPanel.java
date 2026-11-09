@@ -25,32 +25,27 @@ public class VehiclesPanel extends JPanel {
     private final JTextArea txtMedical = Ui.text();
     private final JPanel fields = Ui.verticalPanel();
     private final JButton btnState = new JButton("Change State");
-    private final JButton btnArm = new JButton("Add Weapons");
-    private final JButton btnMedical = new JButton("Add Medical Module");
-    private final JButton btnEditWeapons = new JButton("Edit Weapons");
-    private final JButton btnRemoveWeapons = new JButton("Remove Weapons");
-    private final JButton btnRemoveMedical = new JButton("Remove Medical Module");
-    private final JPanel actions = Ui.actions(btnState, btnArm, btnEditWeapons, btnRemoveWeapons, btnMedical,
-            btnRemoveMedical);
+    private final JButton btnWeapons = new JButton("Add");
+    private final JButton btnMedical = new JButton("Add");
+    private final JButton btnRemoveWeapons = Ui.dangerButton("Remove");
+    private final JButton btnRemoveMedical = Ui.dangerButton("Remove");
+    private final JPanel actions = Ui.actions(btnState);
 
     public VehiclesPanel(AVService vehicleService) {
         this.vehicleService = vehicleService;
 
-        JButton btnHeli = new JButton("New Helicopter");
-        JButton btnIon = new JButton("New Ion");
-        btnHeli.addActionListener(e -> newHeli());
-        btnIon.addActionListener(e -> newIon());
+        JButton btnNew = Ui.menuButton("New Vehicle", Ui.menuItem("Helicopter", this::newHeli),
+                Ui.menuItem("Ion", this::newIon));
         btnState.addActionListener(e -> changeState());
-        btnArm.addActionListener(e -> addWeapons());
+        btnWeapons.addActionListener(e -> changeWeapons());
         btnMedical.addActionListener(e -> addMedicalModule());
-        btnEditWeapons.addActionListener(e -> editWeapons());
         btnRemoveWeapons.addActionListener(e -> removeWeapons());
         btnRemoveMedical.addActionListener(e -> removeMedicalModule());
 
         Ui.addField(fields, "Specs", lblSpecs);
-        Ui.addField(fields, "Weapons", txtCombat);
-        Ui.addField(fields, "Medical module", txtMedical);
-        Ui.layout(this, Ui.toolbar(btnHeli, btnIon), table, Ui.details(lblTitle, fields, actions));
+        Ui.addField(fields, "Weapons", txtCombat, btnWeapons, btnRemoveWeapons);
+        Ui.addField(fields, "Medical module", txtMedical, btnMedical, btnRemoveMedical);
+        Ui.layout(this, Ui.toolbar(btnNew), table, Ui.details(lblTitle, fields, actions));
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting())
@@ -96,8 +91,15 @@ public class VehiclesPanel extends JPanel {
         });
     }
 
-    private void addWeapons() {
+    private void changeWeapons() {
         AerialVehicle vehicle = selected();
+        if (vehicle.isCombat())
+            editWeapons(vehicle);
+        else
+            addWeapons(vehicle);
+    }
+
+    private void addWeapons(AerialVehicle vehicle) {
         String[] v = Ui.form(this, "Add Weapons", "Weapons (comma separated)");
         if (v == null)
             return;
@@ -108,8 +110,7 @@ public class VehiclesPanel extends JPanel {
         });
     }
 
-    private void editWeapons() {
-        AerialVehicle vehicle = selected();
+    private void editWeapons(AerialVehicle vehicle) {
         String[] v = Ui.editForm(this, "Edit Weapons", new String[] { "Weapons (comma separated)" },
                 new String[] { String.join(", ", vehicle.getCombat().getArmaments()) });
         if (v == null)
@@ -123,7 +124,7 @@ public class VehiclesPanel extends JPanel {
 
     private void removeWeapons() {
         AerialVehicle vehicle = selected();
-        if (!Ui.confirm(this, "Remove all weapons from " + vehicle.getSerialNumber() + "?"))
+        if (!Ui.confirm(this, "Remove", "Remove all weapons from " + vehicle.getSerialNumber() + "?"))
             return;
 
         Ui.run(this, () -> {
@@ -134,7 +135,7 @@ public class VehiclesPanel extends JPanel {
 
     private void removeMedicalModule() {
         AerialVehicle vehicle = selected();
-        if (!Ui.confirm(this, "Remove the medical module from " + vehicle.getSerialNumber() + "?"))
+        if (!Ui.confirm(this, "Remove", "Remove the medical module from " + vehicle.getSerialNumber() + "?"))
             return;
 
         Ui.run(this, () -> {
@@ -198,8 +199,7 @@ public class VehiclesPanel extends JPanel {
         txtCombat.setText(vehicle.isCombat() ? String.join(", ", vehicle.getCombat().getArmaments()) : "None");
         txtMedical.setText(vehicle.isMedical() ? vehicle.getMedical().getClientCapacity() + " clients" : "None");
 
-        btnArm.setEnabled(!vehicle.isCombat());
-        btnEditWeapons.setEnabled(vehicle.isCombat());
+        btnWeapons.setText(vehicle.isCombat() ? "Edit" : "Add");
         btnRemoveWeapons.setEnabled(vehicle.isCombat());
         btnMedical.setEnabled(!vehicle.isMedical());
         btnRemoveMedical.setEnabled(vehicle.isMedical());

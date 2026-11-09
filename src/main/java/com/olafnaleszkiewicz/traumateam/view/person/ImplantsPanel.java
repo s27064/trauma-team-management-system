@@ -18,21 +18,34 @@ public class ImplantsPanel extends JPanel {
     private final JTable table = Ui.table(new int[] { 40, 400, 120, 300 }, "ID", "Name", "Tier", "Owner");
     private final DefaultTableModel model = (DefaultTableModel) table.getModel();
     private List<Chrome> implants = List.of();
-    private final JButton btnDelete = new JButton("Delete Implant");
+
+    private final JLabel lblTitle = new JLabel();
+    private final JLabel lblTier = new JLabel();
+    private final JLabel lblOwner = new JLabel();
+    private final JPanel fields = Ui.verticalPanel();
+    private final JButton btnDelete = Ui.dangerButton("Delete Implant");
+    private final JPanel actions = Ui.actions(btnDelete);
 
     public ImplantsPanel(ChromeService chromeService, PersonService personService) {
         this.chromeService = chromeService;
         this.personService = personService;
 
-        JButton btnNew = new JButton("New Implant");
+        JButton btnNew = Ui.primaryButton("New Implant");
         btnNew.addActionListener(e -> newImplant());
         btnDelete.addActionListener(e -> deleteImplant());
-        btnDelete.setEnabled(false);
-        table.getSelectionModel().addListSelectionListener(e -> btnDelete.setEnabled(table.getSelectedRow() >= 0));
 
-        Ui.layout(this, Ui.toolbar(btnNew, btnDelete), table, null);
+        Ui.addField(fields, "Tier", lblTier);
+        Ui.addField(fields, "Owner", lblOwner);
+        Ui.layout(this, Ui.toolbar(btnNew), table, Ui.details(lblTitle, fields, actions));
+
+        table.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting())
+                showDetails(selected());
+        });
+
         Ui.refreshWhenShown(this, this::refresh);
         refresh();
+        showDetails(null);
     }
 
     private void newImplant() {
@@ -56,14 +69,19 @@ public class ImplantsPanel extends JPanel {
     }
 
     private void deleteImplant() {
-        Chrome implant = implants.get(table.getSelectedRow());
-        if (!Ui.confirm(this, "Delete " + implant.getName() + "?"))
+        Chrome implant = selected();
+        if (!Ui.confirm(this, "Delete", "Delete " + implant.getName() + "?"))
             return;
 
         Ui.run(this, () -> {
             chromeService.deleteChrome(implant.getId());
             refresh();
         });
+    }
+
+    private Chrome selected() {
+        int row = table.getSelectedRow();
+        return row >= 0 ? implants.get(row) : null;
     }
 
     private void refresh() {
@@ -73,5 +91,19 @@ public class ImplantsPanel extends JPanel {
             model.addRow(new Object[] { c.getId(), c.getName(), c.getImplantTier(),
                     c.getPerson().getName() + " " + c.getPerson().getSurname() });
         }
+    }
+
+    private void showDetails(Chrome implant) {
+        fields.setVisible(implant != null);
+        actions.setVisible(implant != null);
+
+        if (implant == null) {
+            lblTitle.setText("Select an implant");
+            return;
+        }
+
+        lblTitle.setText(implant.getName());
+        lblTier.setText(implant.getImplantTier().toString());
+        lblOwner.setText(implant.getPerson().getName() + " " + implant.getPerson().getSurname());
     }
 }

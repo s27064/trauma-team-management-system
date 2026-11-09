@@ -2,6 +2,7 @@ package com.olafnaleszkiewicz.traumateam.view.person;
 
 import com.olafnaleszkiewicz.traumateam.model.person.Address;
 import com.olafnaleszkiewicz.traumateam.service.PersonService;
+import com.olafnaleszkiewicz.traumateam.view.common.Ui;
 
 import org.springframework.dao.DataIntegrityViolationException;
 
@@ -40,17 +41,13 @@ public class NewClientDialog extends JDialog {
         form.add(new JLabel("Email:"));
         form.add(emailField);
 
-        JButton ok = new JButton("OK"), cancel = new JButton("Cancel");
+        JButton ok = Ui.primaryButton("Register Client"), cancel = new JButton("Cancel");
         ok.addActionListener(e -> onOK());
         cancel.addActionListener(e -> dispose());
 
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        btns.add(ok);
-        btns.add(cancel);
-
         getContentPane().setLayout(new BorderLayout(10, 10));
         getContentPane().add(form, BorderLayout.CENTER);
-        getContentPane().add(btns, BorderLayout.SOUTH);
+        getContentPane().add(Ui.footer(null, ok, cancel), BorderLayout.SOUTH);
         ((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         pack();
         setLocationRelativeTo(owner);

@@ -33,7 +33,15 @@ public class ObjectivesDialog extends JDialog {
         JButton btnAdd = new JButton("Add Objective");
         JButton btnTeam = new JButton("Assign Team");
         JButton btnStatus = new JButton("Set Status");
-        JButton btnLaunch = new JButton("Launch Mission");
+        JButton btnLaunch = Ui.primaryButton("Launch Mission");
+
+        btnTeam.setEnabled(false);
+        btnStatus.setEnabled(false);
+        table.getSelectionModel().addListSelectionListener(e -> {
+            boolean hasSelection = table.getSelectedRow() >= 0;
+            btnTeam.setEnabled(hasSelection);
+            btnStatus.setEnabled(hasSelection);
+        });
 
         btnAdd.addActionListener(e -> addObjective());
         btnTeam.addActionListener(e -> assignTeam());
@@ -43,17 +51,11 @@ public class ObjectivesDialog extends JDialog {
             refresh();
         }));
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        buttons.add(btnAdd);
-        buttons.add(btnTeam);
-        buttons.add(btnStatus);
-        buttons.add(btnLaunch);
-
         JPanel content = new JPanel(new BorderLayout(10, 10));
         content.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         content.add(lblStatus, BorderLayout.NORTH);
         content.add(new JScrollPane(table), BorderLayout.CENTER);
-        content.add(buttons, BorderLayout.SOUTH);
+        content.add(Ui.footer(null, btnAdd, btnTeam, btnStatus, btnLaunch), BorderLayout.SOUTH);
         setContentPane(content);
 
         refresh();
@@ -104,11 +106,7 @@ public class ObjectivesDialog extends JDialog {
 
     private Objective selected() {
         int row = table.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Select an objective first");
-            return null;
-        }
-        return objectives.get(row);
+        return row >= 0 ? objectives.get(row) : null;
     }
 
     private void refresh() {

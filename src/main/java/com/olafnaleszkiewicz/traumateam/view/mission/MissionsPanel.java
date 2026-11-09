@@ -5,7 +5,6 @@ import com.olafnaleszkiewicz.traumateam.model.enums.MissionStatus;
 import com.olafnaleszkiewicz.traumateam.service.MissionService;
 import com.olafnaleszkiewicz.traumateam.service.TraumaTeamService;
 import com.olafnaleszkiewicz.traumateam.model.Mission;
-import com.olafnaleszkiewicz.traumateam.view.common.ThemeToggleButton;
 import com.olafnaleszkiewicz.traumateam.view.common.Ui;
 
 import javax.swing.*;
@@ -20,10 +19,11 @@ public class MissionsPanel extends JPanel {
     private final MissionTableModel model = new MissionTableModel();
     private final JTable table = new JTable(model);
 
-    private final JButton btnNew = new JButton("New Mission");
-    private final JButton btnDelete = new JButton("Delete Mission");
+    private final JButton btnNew = Ui.primaryButton("New Mission");
+    private final JButton btnDelete = Ui.dangerButton("Delete Mission");
     private final JButton btnClients = new JButton("Manage Clients");
     private final JButton btnObjectives = new JButton("Manage Objectives");
+    private final JPanel actions = Ui.actions(btnObjectives, btnClients, btnDelete);
 
     private final JLabel lblTitle = new JLabel();
     private final JLabel lblStatus = new JLabel();
@@ -38,21 +38,7 @@ public class MissionsPanel extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         /* ===== toolbar ================================================= */
-        btnNew.putClientProperty(FlatClientProperties.STYLE,
-                "background: $Button.default.background; foreground: $Button.default.foreground;"
-                        + "hoverBackground: $Button.default.hoverBackground;");
-
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        actions.add(btnNew);
-        actions.add(Box.createHorizontalStrut(8));
-        actions.add(btnDelete);
-
-        JPanel top = new JPanel(new BorderLayout());
-        top.add(actions, BorderLayout.WEST);
-        top.add(ThemeToggleButton.create(), BorderLayout.EAST);
-        add(top, BorderLayout.NORTH);
-
-        btnDelete.setEnabled(false);
+        add(Ui.toolbar(btnNew), BorderLayout.NORTH);
 
         btnNew.addActionListener(e -> {
             NewMissionDialog dlg = new NewMissionDialog(SwingUtilities.getWindowAncestor(this), missionService);
@@ -66,9 +52,7 @@ public class MissionsPanel extends JPanel {
             if (row < 0)
                 return;
             Mission m = model.getMissionAt(row);
-            int ok = JOptionPane.showConfirmDialog(this, "Delete mission “" + m.getName() + "”?", "Confirm Delete",
-                    JOptionPane.YES_NO_OPTION);
-            if (ok == JOptionPane.YES_OPTION) {
+            if (Ui.confirm(this, "Delete", "Delete mission “" + m.getName() + "”?")) {
                 missionService.deleteMission(m.getId());
                 refreshTable();
             }
@@ -103,7 +87,6 @@ public class MissionsPanel extends JPanel {
 
         table.getSelectionModel().addListSelectionListener(ev -> {
             boolean sel = table.getSelectedRow() >= 0;
-            btnDelete.setEnabled(sel);
             showDetails(sel ? model.getMissionAt(table.getSelectedRow()) : null);
         });
 
@@ -117,11 +100,6 @@ public class MissionsPanel extends JPanel {
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         /* ===== details ================================================= */
-        lblTitle.putClientProperty(FlatClientProperties.STYLE_CLASS, "h3");
-        lblTitle.setAlignmentX(LEFT_ALIGNMENT);
-        btnClients.setAlignmentX(LEFT_ALIGNMENT);
-        btnObjectives.setAlignmentX(LEFT_ALIGNMENT);
-
         txtDesc.setEditable(false);
         txtDesc.setFocusable(false);
         txtDesc.setLineWrap(true);
@@ -138,18 +116,7 @@ public class MissionsPanel extends JPanel {
         addCaption("Description");
         detailFields.add(txtDesc);
 
-        JPanel details = new JPanel();
-        details.setLayout(new BoxLayout(details, BoxLayout.Y_AXIS));
-        details.setBorder(BorderFactory.createEmptyBorder(4, 10, 0, 4));
-        details.setPreferredSize(new Dimension(300, 0));
-        details.add(lblTitle);
-        details.add(Box.createVerticalStrut(16));
-        details.add(detailFields);
-        details.add(Box.createVerticalGlue());
-        details.add(btnObjectives);
-        details.add(Box.createVerticalStrut(8));
-        details.add(btnClients);
-        add(details, BorderLayout.EAST);
+        add(Ui.details(lblTitle, detailFields, actions), BorderLayout.EAST);
 
         Ui.refreshWhenShown(this, this::refreshTable);
         refreshTable();
@@ -195,8 +162,7 @@ public class MissionsPanel extends JPanel {
 
     private void showDetails(Mission m) {
         detailFields.setVisible(m != null);
-        btnClients.setVisible(m != null);
-        btnObjectives.setVisible(m != null);
+        actions.setVisible(m != null);
 
         if (m == null) {
             lblTitle.setText("Select a mission");

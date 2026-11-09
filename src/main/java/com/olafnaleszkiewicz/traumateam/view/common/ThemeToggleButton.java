@@ -1,5 +1,6 @@
 package com.olafnaleszkiewicz.traumateam.view.common;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
@@ -16,6 +17,7 @@ public final class ThemeToggleButton {
     public static JButton create() {
         JButton btn = new JButton("Switch Theme");
         btn.setToolTipText("Switch between Dark/Light mode");
+        btn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
 
         btn.addActionListener(ThemeToggleButton::toggle);
         return btn;

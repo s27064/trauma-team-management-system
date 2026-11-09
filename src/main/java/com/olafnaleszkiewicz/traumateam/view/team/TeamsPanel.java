@@ -32,16 +32,16 @@ public class TeamsPanel extends JPanel {
     private final JButton btnPilot = new JButton("Add");
     private final JButton btnMedic = new JButton("Add");
     private final JButton btnVehicle = new JButton("Assign");
-    private final JButton btnRemovePilot = new JButton("Remove");
-    private final JButton btnRemoveMedic = new JButton("Remove");
-    private final JButton btnRemoveVehicle = new JButton("Remove");
+    private final JButton btnRemovePilot = Ui.dangerButton("Remove");
+    private final JButton btnRemoveMedic = Ui.dangerButton("Remove");
+    private final JButton btnRemoveVehicle = Ui.dangerButton("Remove");
 
     public TeamsPanel(TraumaTeamService teamService, PersonService personService, AVService vehicleService) {
         this.teamService = teamService;
         this.personService = personService;
         this.vehicleService = vehicleService;
 
-        JButton btnNew = new JButton("New Team");
+        JButton btnNew = Ui.primaryButton("New Team");
         btnNew.addActionListener(e -> newTeam());
         btnPilot.addActionListener(e -> addPilot());
         btnMedic.addActionListener(e -> addMedic());
@@ -53,7 +53,7 @@ public class TeamsPanel extends JPanel {
         Ui.addListField(fields, "Vehicles", lstVehicles, btnVehicle, btnRemoveVehicle);
         Ui.addListField(fields, "Pilots", lstPilots, btnPilot, btnRemovePilot);
         Ui.addListField(fields, "Medics", lstMedics, btnMedic, btnRemoveMedic);
-        Ui.layout(this, Ui.toolbar(btnNew), table, Ui.details(lblTitle, fields, new JPanel()));
+        Ui.layout(this, Ui.toolbar(btnNew), table, Ui.details(lblTitle, fields, Ui.actions()));
 
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting())

@@ -3,6 +3,7 @@ package com.olafnaleszkiewicz.traumateam.view.mission;
 import com.olafnaleszkiewicz.traumateam.model.Mission;
 import com.olafnaleszkiewicz.traumateam.model.person.Client;
 import com.olafnaleszkiewicz.traumateam.service.MissionService;
+import com.olafnaleszkiewicz.traumateam.view.common.Ui;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,8 +12,8 @@ public class MissionDetailDialog extends JDialog {
     private final DefaultListModel<Client> listModel = new DefaultListModel<>();
     private final JList<Client> list = new JList<>(listModel);
     private final JComboBox<Client> combo = new JComboBox<>();
-    private final JButton btnAssign = new JButton("Assign Client");
-    private final JButton btnUnassign = new JButton("Unassign Client");
+    private final JButton btnAssign = Ui.primaryButton("Assign Client");
+    private final JButton btnUnassign = Ui.dangerButton("Unassign Client");
     private final MissionService missionService;
     private final Mission mission;
 
@@ -76,12 +77,7 @@ public class MissionDetailDialog extends JDialog {
             int row = list.getSelectedIndex();
             Client c = listModel.getElementAt(row);
 
-            int ok = JOptionPane.showConfirmDialog(
-                    this,
-                    "Unassign “" + c.getEmail() + "” from this mission?",
-                    "Confirm", JOptionPane.YES_NO_OPTION);
-
-            if (ok == JOptionPane.YES_OPTION) {
+            if (Ui.confirm(this, "Unassign", "Unassign “" + c.getEmail() + "” from this mission?")) {
                 missionService.removeClient(mission.getId(), c.getId());
                 loadAssigned();
             }
@@ -90,14 +86,9 @@ public class MissionDetailDialog extends JDialog {
         JPanel top = new JPanel(new BorderLayout());
         top.add(new JScrollPane(list), BorderLayout.CENTER);
 
-        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        bottom.add(combo);
-        bottom.add(btnAssign);
-        bottom.add(btnUnassign);
-
         setLayout(new BorderLayout(5, 5));
         add(top, BorderLayout.CENTER);
-        add(bottom, BorderLayout.SOUTH);
+        add(Ui.footer(combo, btnAssign, btnUnassign), BorderLayout.SOUTH);
 
         ((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         setSize(700, 400);

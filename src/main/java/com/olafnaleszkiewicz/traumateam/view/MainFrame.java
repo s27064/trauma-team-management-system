@@ -1,5 +1,7 @@
 package com.olafnaleszkiewicz.traumateam.view;
 
+import com.formdev.flatlaf.FlatClientProperties;
+import com.olafnaleszkiewicz.traumateam.view.common.ThemeToggleButton;
 import com.olafnaleszkiewicz.traumateam.view.mission.MissionsPanel;
 import com.olafnaleszkiewicz.traumateam.view.person.ClientsPanel;
 import com.olafnaleszkiewicz.traumateam.view.person.CrewPanel;
@@ -18,6 +20,7 @@ import com.olafnaleszkiewicz.traumateam.service.RoleService;
 import com.olafnaleszkiewicz.traumateam.service.TraumaTeamService;
 
 import javax.swing.*;
+import java.awt.BorderLayout;
 
 public class MainFrame extends JFrame {
     public MainFrame(ApplicationContext ctx) {
@@ -38,6 +41,12 @@ public class MainFrame extends JFrame {
         tabs.addTab("Crew", new CrewPanel(personService, roleService));
         tabs.addTab("Policies", new PoliciesPanel(ctx.getBean(PolicyService.class), personService));
         tabs.addTab("Implants", new ImplantsPanel(ctx.getBean(ChromeService.class), personService));
+
+        JPanel trailing = new JPanel(new BorderLayout());
+        trailing.setOpaque(false);
+        trailing.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+        trailing.add(ThemeToggleButton.create(), BorderLayout.EAST);
+        tabs.putClientProperty(FlatClientProperties.TABBED_PANE_TRAILING_COMPONENT, trailing);
 
         add(tabs);
         setDefaultCloseOperation(EXIT_ON_CLOSE);

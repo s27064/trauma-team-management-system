@@ -3,6 +3,7 @@ package com.olafnaleszkiewicz.traumateam.view.mission;
 import javax.swing.*;
 
 import com.olafnaleszkiewicz.traumateam.service.MissionService;
+import com.olafnaleszkiewicz.traumateam.view.common.Ui;
 
 import java.awt.*;
 
@@ -26,7 +27,7 @@ public class NewMissionDialog extends JDialog {
         form.add(nameRow, BorderLayout.NORTH);
         form.add(descRow, BorderLayout.CENTER);
 
-        JButton ok = new JButton("OK"), cancel = new JButton("Cancel");
+        JButton ok = Ui.primaryButton("Create Mission"), cancel = new JButton("Cancel");
         ok.addActionListener(e -> {
             String n = nameField.getText().trim();
             String d = descArea.getText().trim();
@@ -41,13 +42,9 @@ public class NewMissionDialog extends JDialog {
         });
         cancel.addActionListener(e -> dispose());
 
-        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttons.add(ok);
-        buttons.add(cancel);
-
         getContentPane().setLayout(new BorderLayout(10, 10));
         getContentPane().add(form, BorderLayout.CENTER);
-        getContentPane().add(buttons, BorderLayout.SOUTH);
+        getContentPane().add(Ui.footer(null, ok, cancel), BorderLayout.SOUTH);
         ((JComponent) getContentPane()).setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
         pack();
         setLocationRelativeTo(owner);
